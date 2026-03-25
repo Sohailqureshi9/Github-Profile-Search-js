@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Search and explore GitHub user profiles instantly.">
+    <title>GitHub User Search</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="assets/css/style.css">
+</head>
+
+<body>
+    <div class="bg-shape bg-shape-one" aria-hidden="true"></div>
+    <div class="bg-shape bg-shape-two" aria-hidden="true"></div>
+
+    <header class="header">
+        <div class="header-content">
+            <div class="logo">
+                <span class="logo-icon">🚀</span>
+                <h1 class="logo-text">GitHub Search</h1>
+            </div>
+            <p class="header-tagline">A polished GitHub profile explorer for your portfolio</p>
+        </div>
+    </header>
+
+    <main class="container">
+        <section class="card search-card" aria-label="Search GitHub users">
+            <h2>GitHub User Search</h2>
+            <p class="subtitle">Discover profiles, repositories, and coding focus in seconds</p>
+
+            <div class="search-box">
+                <input type="text" id="username" placeholder="Enter GitHub username..." autocomplete="off">
+                <button class="btn" id="searchBtn" type="button">Search</button>
+            </div>
+
+            <div class="search-toolbar">
+                <button class="btn secondary-btn" id="themeToggle" type="button">Toggle Theme</button>
+                <button class="btn secondary-btn" id="clearRecentBtn" type="button">Clear Recent</button>
+            </div>
+
+            <div id="recentSearches" class="recent-searches" aria-label="Recent searches"></div>
+        </section>
+
+        <section id="status" class="status-line" aria-live="polite"></section>
+        <section id="profile" class="profile-container" aria-live="polite"></section>
+
+        <section class="repo-controls" id="repoControls" aria-label="Repository controls">
+            <label for="repoSort">Sort repositories by</label>
+            <select id="repoSort">
+                <option value="updated">Recently Updated</option>
+                <option value="stars">Most Stars</option>
+                <option value="forks">Most Forks</option>
+            </select>
+        </section>
+
+        <section id="repositories" class="repositories-container" aria-live="polite"></section>
+        <section id="error" class="error-message" aria-live="polite"></section>
+    </main>
+
+    <footer class="footer">
+        <div class="footer-content">
+            <p class="footer-text">Created with <span class="heart">❤️</span> by <strong>Sohail Qureshi</strong></p>
+            <p class="footer-copyright">&copy; 2026 GitHub User Search</p>
+        </div>
+    </footer>
+
+    <script src="assets/js/app.js"></script>
+</body>
+
+</html>
