@@ -13,9 +13,45 @@ const clearRecentBtn = document.getElementById("clearRecentBtn");
 const RECENT_SEARCHES_KEY = "github-search-recent-users";
 const MAX_RECENT_SEARCHES = 6;
 const THEME_KEY = "github-search-theme";
+const API_BASE_URL = "https://api.github.com/users";
+const CACHE_TTL_MS = 5 * 60 * 1000;
 
 let currentRepositories = [];
 let currentProfileUrl = "";
+let activeSearchController = null;
+
+const apiCache = new Map();
+
+function escapeHtml(value) {
+    return String(value)
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#39;");
+}
+
+function getCachedValue(key) {
+    const cached = apiCache.get(key);
+
+    if (!cached) {
+        return null;
+    }
+
+    if (Date.now() - cached.timestamp > CACHE_TTL_MS) {
+        apiCache.delete(key);
+        return null;
+    }
+
+    return cached.value;
+}
+
+function setCachedValue(key, value) {
+    apiCache.set(key, {
+        value,
+        timestamp: Date.now()
+    });
+}
 
 function normalizeUrl(url) {
     if (!url) {
@@ -65,6 +101,11 @@ function writeRecentSearches(usernames) {
 }
 
 function clearRecentSearches() {
+    if (activeSearchController) {
+        activeSearchController.abort();
+        activeSearchController = null;
+    }
+
     localStorage.removeItem(RECENT_SEARCHES_KEY);
     renderRecentSearches();
 
@@ -127,18 +168,12 @@ function renderRecentSearches() {
         <p class="recent-title">Recent searches</p>
         <div class="chip-wrap">${chips}</div>
     `;
-
-    recentSearchesDiv.querySelectorAll(".chip").forEach((chip) => {
-        chip.addEventListener("click", () => {
-            usernameInput.value = chip.dataset.username || "";
-            searchUser();
-        });
-    });
 }
 
 function renderProfile(data) {
-    const displayName = data.name || data.login;
+    const displayName = escapeHtml(data.name || data.login);
     const safeBlog = normalizeUrl(data.blog);
+    const safeLogin = escapeHtml(data.login);
 
     currentProfileUrl = `https://github.com/${data.login}`;
 
@@ -148,9 +183,9 @@ function renderProfile(data) {
                 <img src="${data.avatar_url}" alt="${displayName}" class="avatar">
                 <div class="profile-info">
                     <h2>${displayName}</h2>
-                    <p class="username">@${data.login}</p>
-                    ${data.bio ? `<p class="bio">${data.bio}</p>` : ""}
-                    ${data.location ? `<p class="location">Location: ${data.location}</p>` : ""}
+                    <p class="username">@${safeLogin}</p>
+                    ${data.bio ? `<p class="bio">${escapeHtml(data.bio)}</p>` : ""}
+                    ${data.location ? `<p class="location">Location: ${escapeHtml(data.location)}</p>` : ""}
                 </div>
             </div>
 
@@ -173,9 +208,9 @@ function renderProfile(data) {
                 </div>
             </div>
 
-            ${data.company ? `<p class="detail"><strong>Company:</strong> ${data.company}</p>` : ""}
-            ${safeBlog ? `<p class="detail"><strong>Website:</strong> <a href="${safeBlog}" target="_blank" rel="noopener noreferrer">${data.blog}</a></p>` : ""}
-            <p class="detail"><strong>Profile:</strong> <a href="https://github.com/${data.login}" target="_blank" rel="noopener noreferrer">github.com/${data.login}</a></p>
+            ${data.company ? `<p class="detail"><strong>Company:</strong> ${escapeHtml(data.company)}</p>` : ""}
+            ${safeBlog ? `<p class="detail"><strong>Website:</strong> <a href="${safeBlog}" target="_blank" rel="noopener noreferrer">${escapeHtml(data.blog)}</a></p>` : ""}
+            <p class="detail"><strong>Profile:</strong> <a href="https://github.com/${safeLogin}" target="_blank" rel="noopener noreferrer">github.com/${safeLogin}</a></p>
         </article>
     `;
 
@@ -212,10 +247,10 @@ function renderRepositories(repositories) {
             const language = repo.language || "Not specified";
             return `
                 <li class="repo-item">
-                    <a href="${repo.html_url}" target="_blank" rel="noopener noreferrer">${repo.name}</a>
-                    <p>${repo.description || "No description available."}</p>
+                    <a href="${repo.html_url}" target="_blank" rel="noopener noreferrer">${escapeHtml(repo.name)}</a>
+                    <p>${repo.description ? escapeHtml(repo.description) : "No description available."}</p>
                     <div class="repo-meta">
-                        <span>Language: ${language}</span>
+                        <span>Language: ${escapeHtml(language)}</span>
                         <span>Stars: ${repo.stargazers_count}</span>
                         <span>Forks: ${repo.forks_count}</span>
                     </div>
@@ -252,7 +287,15 @@ function updateStatus(data) {
 }
 
 async function fetchGitHubUser(username) {
-    const response = await fetch(`https://api.github.com/users/${encodeURIComponent(username)}`);
+    const cacheKey = `user:${username.toLowerCase()}`;
+    const cached = getCachedValue(cacheKey);
+    if (cached) {
+        return cached;
+    }
+
+    const response = await fetch(`${API_BASE_URL}/${encodeURIComponent(username)}`, {
+        signal: activeSearchController?.signal
+    });
 
     if (response.status === 404) {
         throw new Error("not-found");
@@ -266,19 +309,29 @@ async function fetchGitHubUser(username) {
         throw new Error("request-failed");
     }
 
-    return response.json();
+    const data = await response.json();
+    setCachedValue(cacheKey, data);
+    return data;
 }
 
 async function fetchTopRepositories(username) {
-    const response = await fetch(
-        `https://api.github.com/users/${encodeURIComponent(username)}/repos?sort=updated&per_page=100`
-    );
+    const cacheKey = `repos:${username.toLowerCase()}`;
+    const cached = getCachedValue(cacheKey);
+    if (cached) {
+        return cached;
+    }
+
+    const response = await fetch(`${API_BASE_URL}/${encodeURIComponent(username)}/repos?sort=updated&per_page=100`, {
+        signal: activeSearchController?.signal
+    });
 
     if (!response.ok) {
         return [];
     }
 
-    return response.json();
+    const repositories = await response.json();
+    setCachedValue(cacheKey, repositories);
+    return repositories;
 }
 
 async function searchUser() {
@@ -290,8 +343,14 @@ async function searchUser() {
         return;
     }
 
+    if (activeSearchController) {
+        activeSearchController.abort();
+    }
+    activeSearchController = new AbortController();
+
     searchBtn.disabled = true;
     searchBtn.textContent = "Searching...";
+    statusDiv.textContent = "Searching profile...";
     showLoading();
 
     try {
@@ -311,6 +370,10 @@ async function searchUser() {
         const newUrl = `${window.location.pathname}?${params.toString()}`;
         window.history.replaceState({}, "", newUrl);
     } catch (error) {
+        if (error.name === "AbortError") {
+            return;
+        }
+
         profileDiv.innerHTML = "";
         repositoriesDiv.innerHTML = "";
 
@@ -324,6 +387,7 @@ async function searchUser() {
 
         console.error("GitHub search error:", error);
     } finally {
+        activeSearchController = null;
         searchBtn.disabled = false;
         searchBtn.textContent = "Search";
     }
@@ -344,6 +408,16 @@ usernameInput.addEventListener("keydown", (event) => {
     if (event.key === "Enter") {
         searchUser();
     }
+});
+
+recentSearchesDiv.addEventListener("click", (event) => {
+    const chipButton = event.target.closest(".chip");
+    if (!chipButton) {
+        return;
+    }
+
+    usernameInput.value = chipButton.dataset.username || "";
+    searchUser();
 });
 
 repoSort.addEventListener("change", () => {
