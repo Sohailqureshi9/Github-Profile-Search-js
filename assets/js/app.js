@@ -65,8 +65,21 @@ function writeRecentSearches(usernames) {
 }
 
 function clearRecentSearches() {
-    writeRecentSearches([]);
+    localStorage.removeItem(RECENT_SEARCHES_KEY);
     renderRecentSearches();
+
+    clearState();
+    usernameInput.value = "";
+    statusDiv.textContent = "Recent searches cleared. Screen reset.";
+    currentRepositories = [];
+    currentProfileUrl = "";
+    repoSort.value = "updated";
+
+    const params = new URLSearchParams(window.location.search);
+    params.delete("user");
+    const newQuery = params.toString();
+    const newUrl = newQuery ? `${window.location.pathname}?${newQuery}` : window.location.pathname;
+    window.history.replaceState({}, "", newUrl);
 }
 
 function setTheme(theme) {
@@ -99,6 +112,7 @@ function addRecentSearch(username) {
 
 function renderRecentSearches() {
     const recent = readRecentSearches();
+    clearRecentBtn.disabled = recent.length === 0;
 
     if (!recent.length) {
         recentSearchesDiv.innerHTML = "";
