@@ -158,6 +158,23 @@ body {
     animation: cardReveal 480ms ease both;
 }
 
+.search-card {
+    position: relative;
+    overflow: hidden;
+}
+
+.search-card::before {
+    content: "";
+    position: absolute;
+    top: -84px;
+    right: -90px;
+    width: 200px;
+    height: 200px;
+    border-radius: 999px;
+    background: radial-gradient(circle, rgba(19, 181, 209, 0.25), transparent 70%);
+    pointer-events: none;
+}
+
 @keyframes cardReveal {
     from {
         opacity: 0;
@@ -174,6 +191,20 @@ body {
     font-size: clamp(1.65rem, 3vw, 2.1rem);
     margin-bottom: 10px;
     color: #0b2944;
+}
+
+.eyebrow {
+    display: inline-flex;
+    margin-bottom: 10px;
+    padding: 5px 10px;
+    font-size: 0.74rem;
+    font-weight: 700;
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
+    color: #155e75;
+    border-radius: 999px;
+    border: 1px solid rgba(19, 181, 209, 0.38);
+    background: rgba(236, 254, 255, 0.84);
 }
 
 .subtitle {
@@ -228,6 +259,13 @@ body {
     gap: 10px;
 }
 
+.search-hint {
+    margin-top: 12px;
+    color: #32516a;
+    font-size: 0.84rem;
+    letter-spacing: 0.02em;
+}
+
 #username {
     flex: 1;
     padding: 13px 15px;
@@ -273,6 +311,15 @@ body {
 .btn:disabled {
     opacity: 0.75;
     cursor: not-allowed;
+}
+
+.btn:focus-visible,
+.chip:focus-visible,
+#username:focus-visible,
+#repoSort:focus-visible,
+.repo-item a:focus-visible {
+    outline: 3px solid rgba(19, 181, 209, 0.28);
+    outline-offset: 2px;
 }
 
 .profile-container {
@@ -410,6 +457,26 @@ body.light .repo-controls {
     animation: cardReveal 500ms ease both;
 }
 
+.repo-item:nth-child(2) {
+    animation-delay: 70ms;
+}
+
+.repo-item:nth-child(3) {
+    animation-delay: 130ms;
+}
+
+.repo-item:nth-child(4) {
+    animation-delay: 190ms;
+}
+
+.repo-item:nth-child(5) {
+    animation-delay: 250ms;
+}
+
+.repo-item:nth-child(6) {
+    animation-delay: 310ms;
+}
+
 .repo-item:hover {
     transform: translateY(-2px);
     box-shadow: 0 8px 16px rgba(2, 132, 199, 0.14);
@@ -462,6 +529,7 @@ body.light .error-message {
 .footer-text {
     color: #1f3e55;
     font-weight: 500;
+    margin-bottom: 6px;
 }
 
 .heart {
@@ -553,6 +621,13 @@ body.light .error-message {
     box-shadow: 0 8px 16px rgba(127, 29, 29, 0.12);
 }
 
-.footer-text {
-    margin-bottom: 6px;
+@media (prefers-reduced-motion: reduce) {
+
+    *,
+    *::before,
+    *::after {
+        animation: none !important;
+        transition: none !important;
+        scroll-behavior: auto !important;
+    }
 }

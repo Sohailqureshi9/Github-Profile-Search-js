@@ -85,6 +85,10 @@ function showLoading() {
     `;
 }
 
+function setIdleStatus() {
+    statusDiv.textContent = "Ready to explore: enter a GitHub username and press Search.";
+}
+
 function readRecentSearches() {
     try {
         const stored = localStorage.getItem(RECENT_SEARCHES_KEY);
@@ -111,7 +115,7 @@ function clearRecentSearches() {
 
     clearState();
     usernameInput.value = "";
-    statusDiv.textContent = "Recent searches cleared. Screen reset.";
+    statusDiv.textContent = "Recent searches cleared. Ready for a fresh search.";
     currentRepositories = [];
     currentProfileUrl = "";
     repoSort.value = "updated";
@@ -365,6 +369,7 @@ async function searchUser() {
         currentRepositories = repositories;
         renderRepositories(sortRepositories(currentRepositories, repoSort.value));
         addRecentSearch(username);
+        profileDiv.scrollIntoView({ behavior: "smooth", block: "start" });
 
         const params = new URLSearchParams(window.location.search);
         params.set("user", userData.login);
@@ -433,3 +438,7 @@ clearRecentBtn.addEventListener("click", clearRecentSearches);
 initializeTheme();
 renderRecentSearches();
 bootFromUrl();
+
+if (!new URLSearchParams(window.location.search).get("user")) {
+    setIdleStatus();
+}
