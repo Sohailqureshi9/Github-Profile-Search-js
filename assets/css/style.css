@@ -155,6 +155,19 @@ body {
     padding: 30px;
     box-shadow: var(--shadow-lg);
     backdrop-filter: blur(14px);
+    animation: cardReveal 480ms ease both;
+}
+
+@keyframes cardReveal {
+    from {
+        opacity: 0;
+        transform: translateY(12px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 .search-card h2 {
@@ -394,6 +407,7 @@ body.light .repo-controls {
     padding: 14px;
     background: linear-gradient(135deg, rgba(248, 252, 255, 0.96), rgba(240, 253, 250, 0.92));
     transition: transform 0.2s ease, box-shadow 0.2s ease;
+    animation: cardReveal 500ms ease both;
 }
 
 .repo-item:hover {
@@ -507,9 +521,10 @@ body.light .error-message {
     }
 
     .repo-controls {
-        justify-content: stretch;
+        justify-content: flex-start;
         align-items: flex-start;
         flex-direction: column;
+        gap: 8px;
     }
 
     #repoSort {
@@ -534,63 +549,10 @@ body.light .error-message {
     color: #991b1b;
     padding: 12px 14px;
     border-left: 4px solid #dc2626;
-    border-radius: 8px;
+    border-radius: 10px;
+    box-shadow: 0 8px 16px rgba(127, 29, 29, 0.12);
 }
 
 .footer-text {
     margin-bottom: 6px;
-}
-
-.heart {
-    display: inline-block;
-    animation: heartbeat 1.6s infinite;
-}
-
-@keyframes heartbeat {
-
-    0%,
-    100% {
-        transform: scale(1);
-    }
-
-    25% {
-        transform: scale(1.15);
-    }
-
-    50% {
-        transform: scale(1);
-    }
-}
-
-@media (max-width: 680px) {
-    .search-box {
-        flex-direction: column;
-    }
-
-    .btn {
-        width: 100%;
-    }
-
-    .search-toolbar {
-        flex-direction: column;
-    }
-
-    .profile-header {
-        flex-direction: column;
-        align-items: center;
-        text-align: center;
-    }
-
-    .stats {
-        grid-template-columns: 1fr;
-    }
-
-    .repo-meta {
-        flex-direction: column;
-        align-items: flex-start;
-    }
-
-    .repo-controls {
-        justify-content: space-between;
-    }
 }
