@@ -131,6 +131,7 @@ function setTheme(theme) {
     }
 
     localStorage.setItem(THEME_KEY, theme);
+    themeToggle.textContent = theme === "light" ? "Use Dark Theme" : "Use Light Theme";
 }
 
 function initializeTheme() {
